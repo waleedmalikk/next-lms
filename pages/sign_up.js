@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useRouter } from "next/router";
+import Router, { useRouter } from "next/router";
 import {
   FormControl,
   FormLabel,
@@ -15,20 +15,33 @@ import {
 } from "@chakra-ui/react";
 import styles from "@pages/styles/Home.module.css";
 import * as checks from "@pages/lib/server_checks";
-// import * as dotenv from "dotenv";
-// dotenv.config();
 
 import { useState } from "react";
 
-export default function Home() {
+export default function sign_up() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const handleEmailChange = (e) => setEmail(e.target.value);
-  const handlePasswordChange = (e) => setPassword(e.target.value);
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  async function submit_handler(event) {
-    event.preventDefault();
+  const handleEmailChange = (e) => setEmail(e.target.value);
+  const handleUsernameChange = (e) => setUsername(e.target.value);
+  const handlePasswordChange = (e) => setPassword(e.target.value);
+  const handleConfirmPasswordChange = (e) => setConfirmPassword(e.target.value);
+
+  async function signUpHandler(e) {
+    e.preventDefault();
+
+    if (checks.isStringEmpty(username)) {
+      alert("username cannot be empty.");
+      return;
+    }
+    if (!checks.minMax(username, 5, 40)) {
+      alert("username length must be between 5 to 40 characters.");
+      return;
+    }
+
     if (checks.isStringEmpty(email)) {
       alert("email cannot be empty.");
       return;
@@ -46,15 +59,23 @@ export default function Home() {
       alert("password length must be between 5 to 40 characters.");
       return;
     }
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
     const requestOptions = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email, password: password }),
+      body: JSON.stringify({
+        username: username,
+        email: email,
+        password: password,
+      }),
     };
-    // console.log(requestOptions);
 
     const response = await fetch(
-      "http://localhost:3000/api/users/login",
+      "http://localhost:3000/api/users/register",
       requestOptions
     );
     const data = await response.json();
@@ -64,20 +85,30 @@ export default function Home() {
       router.push("/table");
     }
   }
+
   return (
     <>
       <Head>
-        <title>Log in</title>
+        <title>Sign Up</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <main>
         <Box className={styles.logo_box}>
           <Image className={styles.logo} src="/library_logo.svg" />
         </Box>
-        <form onSubmit={submit_handler}>
+        <form onSubmit={signUpHandler}>
           <div className={styles.form_container1}>
             <div className={styles.form_container2}>
               <FormControl className={styles.form}>
+                <InputGroup className={styles.group}>
+                  <FormLabel className={styles.label}>Username</FormLabel>
+                  <Input
+                    type="text"
+                    placeholder="Enter Username"
+                    value={username}
+                    onChange={handleUsernameChange}
+                  />
+                </InputGroup>
                 <InputGroup className={styles.group}>
                   <FormLabel className={styles.label}>Email</FormLabel>
                   <Input
@@ -96,11 +127,22 @@ export default function Home() {
                     onChange={handlePasswordChange}
                   />
                 </InputGroup>
+                <InputGroup className={styles.group}>
+                  <FormLabel className={styles.label}>
+                    Confirm Password
+                  </FormLabel>
+                  <Input
+                    type="password"
+                    placeholder="Re-Enter Password"
+                    value={confirmPassword}
+                    onChange={handleConfirmPasswordChange}
+                  />
+                </InputGroup>
                 <Button type="submit" className={styles.login_button}>
-                  Login
+                  Sign Up
                 </Button>
               </FormControl>
-              <Link href="/sign_up">Don't have an Account? Sign up Here.</Link>
+              <Link href="/">Already have an Account? Login Here.</Link>
             </div>
           </div>
         </form>
